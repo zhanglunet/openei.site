@@ -10,17 +10,15 @@ interface ConceptCardProps {
 
 const ConceptCard: React.FC<ConceptCardProps> = ({ icon, title, description, delay }) => {
   return (
-    <div 
-      className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl"
-    >
+    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:bg-gray-750 transition-colors duration-200">
       <div className="flex flex-col items-center text-center">
-        <div className="mb-6 p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full group-hover:from-blue-400 group-hover:to-cyan-400 transition-all duration-300 transform group-hover:rotate-12">
+        <div className="mb-4 p-3 bg-blue-600 rounded-full">
           {icon}
         </div>
-        <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-blue-300 transition-colors">
+        <h3 className="text-lg font-semibold text-white mb-3">
           {title}
         </h3>
-        <p className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors">
+        <p className="text-gray-400 text-sm leading-relaxed">
           {description}
         </p>
       </div>
@@ -57,17 +55,16 @@ const CoreConcepts: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-gray-900 to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 bg-gray-900">
+      <div className="container mx-auto px-6">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             玩转OpenEI
-            <span className="block text-2xl md:text-3xl text-blue-400 font-normal mt-2">
-              The OpenEI Way
-            </span>
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full"></div>
+          <p className="text-gray-400 text-lg">
+            The OpenEI Way
+          </p>
         </div>
 
         {/* Concepts Grid */}
@@ -83,16 +80,11 @@ const CoreConcepts: React.FC = () => {
           ))}
         </div>
 
-        {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-xl text-gray-300 mb-8">
+        {/* Bottom Description */}
+        <div className="text-center mt-12">
+          <p className="text-gray-400 text-base max-w-2xl mx-auto">
             通过这四大核心理念，我们致力于构建一个完整的具身智能生态系统
           </p>
-          <div className="flex justify-center space-x-4">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse delay-200"></div>
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-400"></div>
-          </div>
         </div>
       </div>
 

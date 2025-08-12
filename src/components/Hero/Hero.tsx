@@ -2,58 +2,51 @@ import { Link } from 'react-router-dom';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* 背景装饰 */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/20 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="container mx-auto px-4 text-center relative z-10">
-        <div className="max-w-4xl mx-auto">
+    <section className="relative bg-gray-900 py-20 md:py-32">
+      <div className="container mx-auto px-6">
+        <div className="max-w-4xl mx-auto text-center">
           {/* 主标题 */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">
             OpenEI
           </h1>
           
           {/* 副标题 */}
-          <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-gray-200">
+          <h2 className="text-xl md:text-2xl font-medium mb-8 text-gray-300">
             具身智能开源社区
           </h2>
           
           {/* 描述文字 */}
-          <p className="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed max-w-3xl mx-auto">
-            汇聚创新者和生态伙伴的综合性平台，为具身智能创业者提供技术资源、经验分享和合作机会，
-            推动具身智能技术的产业化应用。
+          <p className="text-base md:text-lg text-gray-400 mb-12 leading-relaxed max-w-2xl mx-auto">
+            在科技浪潮的澎湃浪潮中，OpenEI具身智能开源社区应运而生，怀揣着远大的理想与坚定的信念，
+            我们希望通过OpenEI社区的不懈努力，让具身智能的创业之路不再荆棘丛生。
           </p>
 
           {/* CTA按钮组 */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               to="/platform"
-              className="px-8 py-4 bg-primary hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-primary/25"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors duration-200"
             >
-              探索平台
+              公共平台
             </Link>
             <Link
               to="/projects"
-              className="px-8 py-4 border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded transition-colors duration-200"
             >
               开源项目
             </Link>
             <Link
-              to="/partners"
-              className="px-8 py-4 border-2 border-accent text-accent hover:bg-accent hover:text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+              to="/marketplace"
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded transition-colors duration-200"
             >
-              生态伙伴
+              应用市场
             </Link>
-          </div>
-
-          {/* 滚动提示 */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
-            </div>
+            <Link
+              to="/guide"
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded transition-colors duration-200"
+            >
+              玩转OpenEI
+            </Link>
           </div>
         </div>
       </div>

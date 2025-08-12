@@ -1,7 +1,7 @@
 # TODO:
 
-- [x] git-1: 检查并初始化git仓库 (priority: High)
-- [ ] git-2: 添加所有项目文件到git (**IN PROGRESS**) (priority: High)
-- [ ] git-3: 创建初始提交 (priority: High)
-- [ ] git-4: 添加GitHub远程仓库 (priority: High)
-- [ ] git-5: 推送代码到main分支 (priority: High)
+- [ ] git-update-1: 检查当前git状态并添加所有更改的文件 (**IN PROGRESS**) (priority: High)
+- [ ] git-update-2: 提交最新的样式更改到本地git仓库 (priority: High)
+- [ ] git-update-3: 推送代码更改到GitHub仓库 (priority: High)
+- [ ] vercel-setup-1: 配置Vercel项目与GitHub仓库的自动部署连接 (priority: High)
+- [ ] vercel-setup-2: 验证自动部署配置是否正常工作 (priority: Medium)

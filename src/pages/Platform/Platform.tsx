@@ -42,39 +42,38 @@ const Platform: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gray-900">
       {/* Hero Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+      <section className="py-16">
+        <div className="container mx-auto px-6 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
             公共平台
-            <span className="block text-2xl md:text-3xl text-blue-400 font-normal mt-2">
-              Public Platform
-            </span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-gray-400 text-lg mb-6">
+            Public Platform
+          </p>
+          <p className="text-base text-gray-300 max-w-2xl mx-auto">
             为具身智能开发者提供完整的云端开发平台，从模型训练到应用部署，一站式解决方案
           </p>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full"></div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-12">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
+                className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:bg-gray-750 transition-colors duration-200"
               >
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${feature.color} rounded-full mb-6`}>
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-full mb-4">
                   <div className="text-white">
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-white mb-3">{feature.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -82,39 +81,39 @@ const Platform: React.FC = () => {
       </section>
 
       {/* Platform Architecture */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">平台架构</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
+      <section className="py-12">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">平台架构</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm">
               基于云原生技术栈构建的现代化AI开发平台
             </p>
           </div>
           
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Cloud className="w-10 h-10 text-white" />
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Cloud className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">云端基础设施</h3>
-                <p className="text-gray-400">弹性计算资源，自动扩缩容</p>
+                <h3 className="text-lg font-semibold text-white mb-2">云端基础设施</h3>
+                <p className="text-gray-400 text-sm">弹性计算资源，自动扩缩容</p>
               </div>
               
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Server className="w-10 h-10 text-white" />
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Server className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">AI开发工具链</h3>
-                <p className="text-gray-400">完整的模型开发生命周期</p>
+                <h3 className="text-lg font-semibold text-white mb-2">AI开发工具链</h3>
+                <p className="text-gray-400 text-sm">完整的模型开发生命周期</p>
               </div>
               
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Database className="w-10 h-10 text-white" />
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Database className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">数据服务</h3>
-                <p className="text-gray-400">海量数据存储与处理</p>
+                <h3 className="text-lg font-semibold text-white mb-2">数据服务</h3>
+                <p className="text-gray-400 text-sm">海量数据存储与处理</p>
               </div>
             </div>
           </div>
@@ -122,18 +121,18 @@ const Platform: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">开始使用公共平台</h2>
-            <p className="text-gray-300 mb-8 text-lg">
+      <section className="py-12">
+        <div className="container mx-auto px-6 text-center">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-8">
+            <h2 className="text-2xl font-bold text-white mb-3">开始使用公共平台</h2>
+            <p className="text-gray-400 mb-6 text-base">
               立即注册，体验强大的具身智能开发平台
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium transition-colors duration-200">
                 免费试用
               </button>
-              <button className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-all duration-300">
+              <button className="border border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-2 rounded font-medium transition-colors duration-200">
                 了解更多
               </button>
             </div>
