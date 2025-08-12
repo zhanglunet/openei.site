@@ -1,5 +1,8 @@
 # OpenEI 具身智能开源社区官网
 
+## Auto-deployment Status
+This project is configured for automatic deployment from GitHub to Vercel.
+
 ## 项目简介
 
 OpenEI具身智能开源社区官网是一个展示具身智能技术、汇聚创新者和生态伙伴的综合性平台。网站旨在为具身智能创业者提供技术资源、经验分享和合作机会，推动具身智能技术的产业化应用。
