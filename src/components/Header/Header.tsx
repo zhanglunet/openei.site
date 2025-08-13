@@ -3,6 +3,8 @@ import { NavItem } from '../../types';
 
 const navItems: NavItem[] = [
   { label: '首页', path: '/' },
+  { label: '模型', path: '/models' },
+  { label: '数据', path: '/data' },
   { label: '公共平台', path: '/platform' },
   { label: '开源项目', path: '/projects' },
   { label: '应用市场', path: '/marketplace' },

@@ -8,11 +8,14 @@ const Header: React.FC = () => {
 
   const navItems = [
     { path: '/', label: '首页' },
+    { path: '/models', label: '模型' },
+    { path: '/data', label: '数据' },
     { path: '/platform', label: '公共平台' },
     { path: '/projects', label: '开源项目' },
     { path: '/marketplace', label: '应用市场' },
     { path: '/guide', label: '玩转OpenEI' },
     { path: '/partners', label: '生态伙伴' },
+    { path: '/activities', label: '活动' },
   ];
 
   const isActive = (path: string) => {
