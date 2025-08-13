@@ -26,6 +26,7 @@ const News: React.FC = () => {
   const [selectedSourceType, setSelectedSourceType] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const itemsPerPage = 5;
 
   // 筛选和搜索逻辑
@@ -42,7 +43,24 @@ const News: React.FC = () => {
       
       return matchesSearch && matchesSource && matchesCategory && matchesSourceType;
     });
-  }, [searchTerm, selectedSource, selectedCategory, selectedSourceType]);
+  }, [news, searchTerm, selectedSource, selectedCategory, selectedSourceType]);
+
+  // 调试信息收集
+  React.useEffect(() => {
+    const debugData = {
+      newsCount: news.length,
+      loading,
+      error,
+      lastUpdated: lastUpdated?.toISOString(),
+      searchTerm,
+      selectedSource,
+      selectedCategory,
+      selectedSourceType,
+      filteredCount: filteredNews.length
+    };
+    setDebugInfo(JSON.stringify(debugData, null, 2));
+    console.log('[News Component] Debug Info:', debugData);
+  }, [news, loading, error, lastUpdated, searchTerm, selectedSource, selectedCategory, selectedSourceType, filteredNews.length]);
 
   // 分页逻辑
   const totalPages = Math.ceil(filteredNews.length / itemsPerPage);
@@ -141,6 +159,65 @@ const News: React.FC = () => {
                 <span className="text-red-300">{error}</span>
               </div>
             )}
+            
+            {/* 调试信息面板 */}
+            <details className="mb-4">
+              <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300">
+                调试信息 (点击展开)
+              </summary>
+              <div className="mt-2 p-4 bg-gray-800 border border-gray-700 rounded-lg">
+                <pre className="text-xs text-gray-300 whitespace-pre-wrap overflow-auto max-h-40">
+                  {debugInfo}
+                </pre>
+                <div className="mt-2 flex space-x-2">
+                  <button
+                    onClick={() => {
+                      console.log('[Debug] Manual refresh triggered');
+                      refreshNews();
+                    }}
+                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                  >
+                    手动刷新
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('[Debug] Console log triggered');
+                      console.log('Current news data:', news);
+                      console.log('Filtered news data:', filteredNews);
+                    }}
+                    className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
+                  >
+                    输出到控制台
+                  </button>
+                  <button
+                    onClick={async () => {
+                      console.log('[Debug] Direct newsService test triggered');
+                      try {
+                        // 动态导入newsService
+                        const { newsService } = await import('../../services/newsService');
+                        console.log('newsService imported:', newsService);
+                        
+                        // 清除缓存
+                        newsService.clearCache();
+                        console.log('Cache cleared');
+                        
+                        // 获取新闻
+                        const testNews = await newsService.getAllNews();
+                        console.log('Test news result:', testNews.length, 'items');
+                        if (testNews.length > 0) {
+                          console.log('First test news item:', testNews[0]);
+                        }
+                      } catch (error) {
+                        console.error('Direct test error:', error);
+                      }
+                    }}
+                    className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
+                  >
+                    直接测试服务
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </div>
