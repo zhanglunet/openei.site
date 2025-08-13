@@ -7,6 +7,7 @@ import Platform from './pages/Platform/Platform';
 import Projects from './pages/Projects/Projects';
 import Marketplace from './pages/Marketplace/Marketplace';
 import Hardware from './pages/Hardware/Hardware';
+import News from './pages/News/News';
 import Guide from './pages/Guide/Guide';
 import Partners from './pages/Partners/Partners';
 import Activities from './pages/Activities/Activities';
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
       {
         path: '/hardware',
         element: <Hardware />,
+      },
+      {
+        path: '/news',
+        element: <News />,
       },
       {
         path: '/guide',
