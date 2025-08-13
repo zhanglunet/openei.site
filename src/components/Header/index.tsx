@@ -13,6 +13,7 @@ const Header: React.FC = () => {
     { path: '/platform', label: '公共平台' },
     { path: '/projects', label: '开源项目' },
     { path: '/marketplace', label: '应用市场' },
+    { path: '/hardware', label: '硬件展示' },
     { path: '/guide', label: '玩转OpenEI' },
     { path: '/partners', label: '生态伙伴' },
     { path: '/activities', label: '活动' },

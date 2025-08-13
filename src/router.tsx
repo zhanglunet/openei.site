@@ -6,6 +6,7 @@ import Data from './pages/Data/Data';
 import Platform from './pages/Platform/Platform';
 import Projects from './pages/Projects/Projects';
 import Marketplace from './pages/Marketplace/Marketplace';
+import Hardware from './pages/Hardware/Hardware';
 import Guide from './pages/Guide/Guide';
 import Partners from './pages/Partners/Partners';
 import Activities from './pages/Activities/Activities';
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: '/marketplace',
         element: <Marketplace />,
+      },
+      {
+        path: '/hardware',
+        element: <Hardware />,
       },
       {
         path: '/guide',
