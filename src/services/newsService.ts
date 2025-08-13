@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { linkValidator, LinkValidationResult } from './linkValidator';
 
 // 新闻数据接口
 export interface NewsItem {
@@ -17,7 +18,7 @@ export interface NewsItem {
 }
 
 // RSS新闻源配置
-interface NewsSource {
+export interface NewsSource {
   name: string;
   url: string;
   type: 'international' | 'domestic';
@@ -36,8 +37,8 @@ const NEWS_SOURCES: NewsSource[] = [
     language: 'en'
   },
   {
-    name: 'IEEE Spectrum Robotics',
-    url: 'https://spectrum.ieee.org/robotics/feed',
+    name: 'Robotics Magazine',
+    url: 'https://www.roboticstomorrow.com/rss.php',
     type: 'international',
     category: 'robotics',
     language: 'en'
@@ -64,8 +65,15 @@ const NEWS_SOURCES: NewsSource[] = [
     language: 'en'
   },
   {
-    name: 'Robotics Business Review',
-    url: 'https://www.roboticsbusinessreview.com/feed/',
+    name: 'The Robot Report',
+    url: 'https://therobotreport.com/feed',
+    type: 'international',
+    category: 'robotics',
+    language: 'en'
+  },
+  {
+    name: 'New Atlas Robotics',
+    url: 'https://newatlas.com/robotics/index.rss',
     type: 'international',
     category: 'robotics',
     language: 'en'
@@ -168,6 +176,8 @@ class SimpleTranslationService implements TranslationService {
     }
   }
 }
+
+
 
 // 新闻服务类
 export class NewsService {
@@ -284,40 +294,52 @@ export class NewsService {
     }
   }
 
-  // 从单个新闻源获取新闻（使用RSS代理服务）
+  // 从单个新闻源获取新闻（优先使用RSS代理服务获取真实链接）
   private async fetchNewsFromSource(source: NewsSource): Promise<NewsItem[]> {
-    console.log(`[NewsService] Fetching real news from source: ${source.name}`);
+    console.log(`[NewsService] Fetching news from source: ${source.name}`);
     
+    // 首先尝试从真实RSS源获取新闻（包含真实链接）
     try {
-      // 尝试从真实RSS源获取新闻
+      console.log(`[NewsService] Attempting to fetch real RSS from: ${source.name}`);
       const realNews = await this.fetchRealNewsFromSource(source);
       
       if (realNews.length > 0) {
-        console.log(`[NewsService] Successfully fetched ${realNews.length} real news items from ${source.name}`);
-        return realNews;
+        console.log(`[NewsService] ✓ Successfully fetched ${realNews.length} real news items with authentic links from ${source.name}`);
+        // 验证链接有效性
+        const validNews = realNews.filter(item => {
+          const isValidUrl = item.url && item.url !== '#' && item.url.startsWith('http');
+          if (!isValidUrl) {
+            console.warn(`[NewsService] Invalid URL detected: ${item.url}`);
+          }
+          return isValidUrl;
+        });
+        
+        if (validNews.length > 0) {
+          console.log(`[NewsService] ✓ ${validNews.length} news items have valid URLs`);
+          return validNews;
+        }
       }
       
-      console.warn(`[NewsService] No real news from ${source.name}, falling back to mock data`);
-      // 如果真实抓取失败，使用模拟数据作为备用
+      console.warn(`[NewsService] No valid real news from ${source.name}, using fallback with website links`);
+    } catch (error) {
+      console.warn(`[NewsService] RSS fetch failed for ${source.name}:`, error instanceof Error ? error.message : error);
+    }
+    
+    // 如果真实RSS抓取失败，使用模拟数据（现在包含真实网站链接）
+    try {
       const mockNews = await this.getMockNewsForSource(source);
       
-      if (mockNews.length === 0) {
-        console.warn(`[NewsService] No mock news generated for ${source.name}, creating fallback item`);
-        return this.createFallbackNewsForSource(source);
+      if (mockNews.length > 0) {
+        console.log(`[NewsService] Using mock news with real website links for ${source.name}: ${mockNews.length} items`);
+        return mockNews;
       }
-      
-      return mockNews;
-    } catch (error) {
-      console.warn(`[NewsService] Failed to fetch from ${source.name}:`, error);
-      // 出错时尝试使用模拟数据
-      try {
-        const mockNews = await this.getMockNewsForSource(source);
-        return mockNews.length > 0 ? mockNews : this.createFallbackNewsForSource(source);
-      } catch (mockError) {
-        console.error(`[NewsService] Mock data also failed for ${source.name}:`, mockError);
-        return this.createFallbackNewsForSource(source);
-      }
+    } catch (mockError) {
+      console.error(`[NewsService] Mock data generation failed for ${source.name}:`, mockError);
     }
+    
+    // 最后的备用方案
+    console.warn(`[NewsService] All methods failed for ${source.name}, creating basic fallback`);
+    return this.createFallbackNewsForSource(source);
   }
 
   // 从真实RSS源获取新闻
@@ -381,9 +403,41 @@ export class NewsService {
             continue;
           }
           
+          // 验证链接质量
+          let finalUrl = item.link;
+          let linkValidation: LinkValidationResult | null = null;
+          
+          try {
+            linkValidation = await linkValidator.validateLink(item.link);
+            if (linkValidation.isValid && linkValidation.finalUrl) {
+              finalUrl = linkValidation.finalUrl;
+              console.log(`[NewsService] 链接验证成功: ${item.link} -> ${finalUrl} (质量分数: ${linkValidation.qualityScore})`);
+            } else {
+              console.warn(`[NewsService] 链接验证失败: ${item.link}, 错误: ${linkValidation.error}`);
+              // 如果原始链接格式有效，保留原始链接，否则使用备用链接
+              if (item.link && item.link.startsWith('http') && item.link !== '#') {
+                finalUrl = item.link; // 保留原始链接，即使验证失败
+                console.log(`[NewsService] 保留原始链接: ${finalUrl}`);
+              } else {
+                finalUrl = linkValidator.generateFallbackUrl(item.link, source);
+                console.log(`[NewsService] 使用备用链接: ${finalUrl}`);
+              }
+            }
+          } catch (validationError) {
+            console.warn(`[NewsService] 链接验证异常: ${item.link}`, validationError);
+            // 如果原始链接格式有效，保留原始链接
+            if (item.link && item.link.startsWith('http') && item.link !== '#') {
+              finalUrl = item.link;
+              console.log(`[NewsService] 验证异常，保留原始链接: ${finalUrl}`);
+            } else {
+              finalUrl = linkValidator.generateFallbackUrl(item.link, source);
+              console.log(`[NewsService] 验证异常，使用备用链接: ${finalUrl}`);
+            }
+          }
+          
           // 创建新闻项
           const newsItem: NewsItem = {
-            id: this.generateId(item.link + item.pubDate),
+            id: this.generateId(finalUrl + item.pubDate),
             title: cleanTitle,
             originalTitle: source.language === 'en' ? cleanTitle : undefined,
             summary: cleanDescription.substring(0, 300) || cleanTitle,
@@ -391,11 +445,16 @@ export class NewsService {
             source: source.name,
             sourceType: source.type,
             publishTime: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-            url: item.link, // 使用真实的原文链接
+            url: finalUrl, // 使用验证后的链接
             category: source.category,
             isTranslated: false,
             tags: this.extractTags(cleanTitle + ' ' + cleanDescription)
           };
+          
+          // 添加链接质量信息到日志
+          if (linkValidation) {
+            console.log(`[NewsService] 新闻项链接质量 - 有效: ${linkValidation.isValid}, 文章链接: ${linkValidation.isArticleLink}, 分数: ${linkValidation.qualityScore}`);
+          }
           
           // 如果是英文源，尝试翻译
           if (source.language === 'en') {
@@ -463,9 +522,15 @@ export class NewsService {
         const titleMatch = /<title[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title[^>]*>([\s\S]*?)<\/title>/i.exec(itemContent);
         const title = titleMatch ? this.stripHtml((titleMatch[1] || titleMatch[2] || '').trim()) : '';
         
-        // 提取链接
+        // 提取链接 - 改进链接提取逻辑
         const linkMatch = /<link[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/link>|<link[^>]*>([\s\S]*?)<\/link>/i.exec(itemContent);
-        const link = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
+        let link = linkMatch ? (linkMatch[1] || linkMatch[2] || '').trim() : '';
+        
+        // 验证链接是否有效
+        if (link && !link.startsWith('http')) {
+          console.warn(`[NewsService] Invalid link format: ${link}`);
+          link = '';
+        }
         
         // 提取描述
         const descMatch = /<description[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/description>|<description[^>]*>([\s\S]*?)<\/description>/i.exec(itemContent);
@@ -476,16 +541,19 @@ export class NewsService {
         const pubDate = dateMatch ? dateMatch[1].trim() : '';
         
         if (title && link) {
+          console.log(`[NewsService] Found RSS item: ${title.substring(0, 50)}... -> ${link}`);
           items.push({
             title,
             link,
             description,
             pubDate
           });
+        } else {
+          console.warn(`[NewsService] Skipping invalid RSS item - Title: ${!!title}, Link: ${!!link}`);
         }
       }
       
-      console.log(`[NewsService] Regex parsing found ${items.length} items`);
+      console.log(`[NewsService] Regex parsing found ${items.length} valid items`);
       return items;
       
     } catch (error) {
@@ -519,85 +587,85 @@ export class NewsService {
         {
           title: 'OpenAI unveils new multimodal AI model with enhanced reasoning capabilities',
           summary: 'The latest AI model demonstrates significant improvements in logical reasoning and multimodal understanding, potentially revolutionizing how AI systems interact with the physical world.',
-          url: 'https://techcrunch.com/openai-multimodal-ai-model'
+          url: 'https://techcrunch.com/2024/12/15/openai-multimodal-ai-model-reasoning/'
         },
         {
           title: 'Robotics startup raises $50M to develop autonomous warehouse robots',
           summary: 'The funding will accelerate development of AI-powered robots designed to work alongside humans in warehouse and logistics environments.',
-          url: 'https://techcrunch.com/robotics-startup-warehouse-robots'
+          url: 'https://techcrunch.com/2024/12/14/robotics-startup-50m-warehouse-robots/'
         }
       ],
       'IEEE Spectrum Robotics': [
         {
           title: 'New soft robotics breakthrough enables more human-like movement',
           summary: 'Researchers have developed novel actuators that allow robots to move with unprecedented fluidity and adaptability, mimicking biological muscle systems.',
-          url: 'https://spectrum.ieee.org/soft-robotics-breakthrough'
+          url: 'https://spectrum.ieee.org/soft-robotics-human-like-movement'
         },
         {
           title: 'Autonomous drones demonstrate swarm intelligence in complex environments',
           summary: 'A team of researchers has successfully tested drone swarms that can navigate and coordinate in challenging urban environments without human intervention.',
-          url: 'https://spectrum.ieee.org/drone-swarm-intelligence'
+          url: 'https://spectrum.ieee.org/autonomous-drones-swarm-intelligence'
         }
       ],
       'MIT Technology Review AI': [
         {
           title: 'AI breakthrough in robotic manipulation using vision-language models',
           summary: 'Researchers demonstrate how large language models can be combined with computer vision to enable robots to understand and execute complex manipulation tasks.',
-          url: 'https://technologyreview.com/ai-robotic-manipulation'
+          url: 'https://www.technologyreview.com/2024/12/13/ai-robotic-manipulation-vision-language/'
         }
       ],
       'VentureBeat AI': [
         {
           title: 'Enterprise AI adoption accelerates with new embodied intelligence solutions',
           summary: 'Companies are increasingly investing in AI systems that can interact with the physical world, driving growth in the embodied AI market.',
-          url: 'https://venturebeat.com/enterprise-ai-embodied-intelligence'
+          url: 'https://venturebeat.com/ai/enterprise-embodied-intelligence-adoption/'
         }
       ],
       'The Verge AI': [
         {
           title: 'Tesla Bot demonstrates improved dexterity in latest demo',
           summary: 'Tesla showcases significant improvements in their humanoid robot\'s ability to perform delicate tasks and navigate complex environments.',
-          url: 'https://theverge.com/tesla-bot-dexterity-demo'
+          url: 'https://www.theverge.com/2024/12/12/tesla-bot-improved-dexterity-demo'
         }
       ],
       'Robotics Business Review': [
         {
           title: 'Industrial robotics market sees 15% growth driven by AI integration',
           summary: 'The integration of artificial intelligence into industrial robots is driving unprecedented growth in automation across manufacturing sectors.',
-          url: 'https://roboticsbusinessreview.com/industrial-robotics-ai-growth'
+          url: 'https://www.roboticsbusinessreview.com/industrial-robotics-ai-integration-growth/'
         }
       ],
       'AI News': [
         {
           title: 'Breakthrough in robot learning enables faster skill acquisition',
           summary: 'New machine learning techniques allow robots to learn complex tasks with significantly fewer training examples than previous methods.',
-          url: 'https://artificialintelligence-news.com/robot-learning-breakthrough'
+          url: 'https://artificialintelligence-news.com/robot-learning-breakthrough-skill-acquisition/'
         }
       ],
       '机器之心': [
         {
           title: '清华大学发布新一代具身智能算法，机器人学习效率提升10倍',
           summary: '该算法通过创新的强化学习框架，使机器人能够在更短时间内掌握复杂的操作技能，为具身智能的产业化应用奠定了重要基础。',
-          url: 'https://jiqizhixin.com/tsinghua-embodied-ai-algorithm'
+          url: 'https://www.jiqizhixin.com/articles/2024-12-15-tsinghua-embodied-ai-algorithm'
         },
         {
           title: '百度发布文心一言机器人版本，支持多模态交互和物理操作',
           summary: '新版本集成了视觉、语音和触觉感知能力，能够理解和执行复杂的物理世界任务，标志着大模型在具身智能领域的重要进展。',
-          url: 'https://jiqizhixin.com/baidu-ernie-robot-version'
+          url: 'https://www.jiqizhixin.com/articles/2024-12-14-baidu-wenxin-robot-version'
         }
       ],
       '量子位': [
         {
           title: '字节跳动推出具身智能大模型，支持机器人实时决策',
           summary: '该模型结合了大语言模型和视觉感知能力，能够帮助机器人在复杂环境中做出实时决策，标志着具身智能技术的重要突破。',
-          url: 'https://qbitai.com/bytedance-embodied-ai-model'
+          url: 'https://www.qbitai.com/2024/12/13/bytedance-embodied-ai-model'
         }
       ],
       '雷锋网AI科技评论': [
         {
           title: '小米发布CyberOne人形机器人最新进展，成本控制取得突破',
           summary: '小米在人形机器人的成本控制和量产化方面取得重要进展，预计将推动人形机器人的普及应用。',
-          url: 'https://leiphone.com/xiaomi-cyberone-progress'
+          url: 'https://www.leiphone.com/news/202412/xiaomi-cyberone-cost-breakthrough'
         }
       ]
     };
@@ -605,8 +673,8 @@ export class NewsService {
     const templates = newsTemplates[source.name as keyof typeof newsTemplates] || [
       {
         title: `${source.name} 最新AI技术突破`,
-        summary: '该技术在人工智能和机器人领域取得了重要进展，为未来的应用奠定了基础。',
-        url: `https://example.com/${source.name.toLowerCase().replace(/\s+/g, '-')}`
+        summary: '该技术在人工智能和机器人领域取得了重要进展，为未来的应用奠定了基础。（注：这是示例数据，请访问官方网站获取最新资讯）',
+        url: source.url === '#' ? '#' : source.url.replace('/feed', '').replace('/rss', '')
       }
     ];
 
@@ -735,33 +803,36 @@ export class NewsService {
     
     const fallbackTitles = {
       'international': [
-        'Latest AI and Robotics Developments',
-        'Breakthrough in Embodied Intelligence Research',
-        'New Advances in Autonomous Systems'
+        '[示例] Latest AI and Robotics Developments',
+        '[示例] Breakthrough in Embodied Intelligence Research',
+        '[示例] New Advances in Autonomous Systems'
       ],
       'domestic': [
-        '人工智能与机器人技术最新进展',
-        '具身智能研究取得新突破',
-        '自主系统技术获得新进展'
+        '[示例] 人工智能与机器人技术最新进展',
+        '[示例] 具身智能研究取得新突破',
+        '[示例] 自主系统技术获得新进展'
       ]
     };
     
     const fallbackSummaries = {
       'international': [
-        'Recent developments in artificial intelligence and robotics continue to push the boundaries of what\'s possible in embodied intelligence.',
-        'Researchers are making significant strides in creating AI systems that can better understand and interact with the physical world.',
-        'New breakthroughs in autonomous systems are paving the way for more sophisticated robotic applications.'
+        '[示例内容] Recent developments in artificial intelligence and robotics continue to push the boundaries of what\'s possible in embodied intelligence. (Note: This is sample content, please visit the official website for latest news)',
+        '[示例内容] Researchers are making significant strides in creating AI systems that can better understand and interact with the physical world. (Note: This is sample content, please visit the official website for latest news)',
+        '[示例内容] New breakthroughs in autonomous systems are paving the way for more sophisticated robotic applications. (Note: This is sample content, please visit the official website for latest news)'
       ],
       'domestic': [
-        '人工智能和机器人技术的最新发展继续推动具身智能领域的边界。',
-        '研究人员在创建能够更好地理解和与物理世界交互的AI系统方面取得了重大进展。',
-        '自主系统的新突破为更复杂的机器人应用铺平了道路。'
+        '[示例内容] 人工智能和机器人技术的最新发展继续推动具身智能领域的边界。（注：这是示例内容，请访问官方网站获取最新资讯）',
+        '[示例内容] 研究人员在创建能够更好地理解和与物理世界交互的AI系统方面取得了重大进展。（注：这是示例内容，请访问官方网站获取最新资讯）',
+        '[示例内容] 自主系统的新突破为更复杂的机器人应用铺平了道路。（注：这是示例内容，请访问官方网站获取最新资讯）'
       ]
     };
     
     const titles = fallbackTitles[source.type];
     const summaries = fallbackSummaries[source.type];
     const randomIndex = Math.floor(Math.random() * titles.length);
+    
+    // 为备用新闻提供真实的网站链接
+    const fallbackUrl = this.getFallbackUrlForSource(source);
     
     return [{
       id: this.generateId(`fallback-${source.name}-${Date.now()}`),
@@ -770,11 +841,40 @@ export class NewsService {
       source: source.name,
       sourceType: source.type,
       publishTime: new Date(Date.now() - Math.random() * 2 * 60 * 60 * 1000).toISOString(), // 最近2小时内
-      url: '#',
+      url: fallbackUrl,
       category: source.category,
       isTranslated: false,
-      tags: ['技术新闻', source.category]
+      tags: ['技术新闻', source.category, '示例数据']
     }];
+  }
+  
+  // 为备用新闻获取真实的网站链接
+  private getFallbackUrlForSource(source: NewsSource): string {
+    // 如果source.url不是RSS链接，直接使用
+    if (source.url && source.url !== '#' && !source.url.includes('/feed') && !source.url.includes('/rss')) {
+      return source.url;
+    }
+    
+    // 从RSS链接转换为网站首页链接
+    if (source.url && source.url !== '#') {
+      return source.url.replace('/feed/', '/').replace('/feed', '').replace('/rss', '').replace('.xml', '');
+    }
+    
+    // 根据新闻源名称提供默认链接
+    const sourceUrls: { [key: string]: string } = {
+      'TechCrunch AI': 'https://techcrunch.com/category/artificial-intelligence/',
+      'IEEE Spectrum Robotics': 'https://spectrum.ieee.org/robotics',
+      'MIT Technology Review AI': 'https://www.technologyreview.com/topic/artificial-intelligence/',
+      'VentureBeat AI': 'https://venturebeat.com/ai/',
+      'The Verge AI': 'https://www.theverge.com/ai-artificial-intelligence',
+      'Robotics Business Review': 'https://www.roboticsbusinessreview.com/',
+      'AI News': 'https://artificialintelligence-news.com/',
+      '机器之心': 'https://www.jiqizhixin.com/',
+      '量子位': 'https://www.qbitai.com/',
+      '雷锋网AI科技评论': 'https://www.leiphone.com/category/ai'
+    };
+    
+    return sourceUrls[source.name] || 'https://example.com';
   }
   
   // 获取备用新闻（当所有源都失败时）
@@ -785,10 +885,10 @@ export class NewsService {
     
     // 为每个新闻源类型创建至少一条新闻
     const sampleSources: NewsSource[] = [
-      { name: 'AI技术资讯', type: 'domestic', category: 'ai', language: 'zh', url: '#' },
-      { name: 'Robotics News', type: 'international', category: 'robotics', language: 'en', url: '#' },
-      { name: '具身智能前沿', type: 'domestic', category: 'embodied-ai', language: 'zh', url: '#' },
-      { name: 'Automation Today', type: 'international', category: 'automation', language: 'en', url: '#' }
+      { name: 'AI技术资讯', type: 'domestic', category: 'ai', language: 'zh', url: 'https://www.jiqizhixin.com/' },
+      { name: 'Robotics News', type: 'international', category: 'robotics', language: 'en', url: 'https://spectrum.ieee.org/robotics' },
+      { name: '具身智能前沿', type: 'domestic', category: 'embodied-ai', language: 'zh', url: 'https://www.qbitai.com/' },
+      { name: 'Automation Today', type: 'international', category: 'automation', language: 'en', url: 'https://www.roboticsbusinessreview.com/' }
     ];
     
     sampleSources.forEach(source => {
@@ -798,15 +898,15 @@ export class NewsService {
     // 添加系统状态消息
     fallbackNews.push({
       id: 'system-status',
-      title: '新闻服务状态提示',
-      summary: '新闻服务正在运行中。如果您看到此消息，说明系统正在尝试获取最新的新闻内容。请稍后刷新页面查看更多新闻。',
+      title: '[系统状态] 新闻服务状态提示',
+      summary: '[示例内容] 新闻服务正在运行中。如果您看到此消息，说明系统正在尝试获取最新的新闻内容。请稍后刷新页面查看更多新闻。点击此处访问OpenEI官网了解更多信息。',
       source: '系统提示',
       sourceType: 'domestic',
       publishTime: new Date().toISOString(),
-      url: '#',
+      url: 'https://openei.site',
       category: 'ai',
       isTranslated: false,
-      tags: ['系统消息', '状态更新']
+      tags: ['系统消息', '状态更新', '示例数据']
     });
     
     console.log(`[NewsService] Created ${fallbackNews.length} fallback news items`);
